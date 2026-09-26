@@ -2,7 +2,7 @@ package com.karunya.ecommerce.controller;
 
 import com.karunya.ecommerce.model.User;
 import com.karunya.ecommerce.repository.UserRepository;
-
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,14 +21,47 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public User register(@RequestBody User user) {
+    public ResponseEntity<?> register(@RequestBody User user) {
 
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+            return ResponseEntity
+                    .badRequest()
+                    .body("Email already registered");
+        }
 
-        if (user.getRole() == null || user.getRole().isEmpty()) {
+        user.setPassword(
+                passwordEncoder.encode(user.getPassword())
+        );
+
+        if (user.getRole() == null || user.getRole().isBlank()) {
             user.setRole("USER");
         }
 
-        return userRepository.save(user);
+        return ResponseEntity.ok(userRepository.save(user));
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody User user) {
+
+        User existingUser = userRepository
+                .findByEmail(user.getEmail())
+                .orElse(null);
+
+        if (existingUser == null) {
+            return ResponseEntity
+                    .status(401)
+                    .body("Invalid email or password");
+        }
+
+        if (!passwordEncoder.matches(
+                user.getPassword(),
+                existingUser.getPassword())) {
+
+            return ResponseEntity
+                    .status(401)
+                    .body("Invalid email or password");
+        }
+
+        return ResponseEntity.ok(existingUser);
     }
 }

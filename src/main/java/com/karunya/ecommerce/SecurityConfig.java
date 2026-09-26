@@ -1,20 +1,21 @@
 package com.karunya.ecommerce;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
-
 @Configuration
+@EnableWebSecurity
 public class SecurityConfig {
+
     @Bean
-public PasswordEncoder passwordEncoder() {
-    return new BCryptPasswordEncoder();
-}
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -22,10 +23,21 @@ public PasswordEncoder passwordEncoder() {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/products/**").authenticated()
-                .anyRequest().permitAll()
+                .requestMatchers(
+                    "/",
+                    "/api/auth/**",
+                    "/api/products",
+                    "/api/products/**",
+                    "/index.html",
+                    "/products.html",
+                    "/login.html",
+                    "/register.html",
+                    "/orders.html",
+                    "/style.css"
+                ).permitAll()
+                .anyRequest().authenticated()
             )
-            .httpBasic(Customizer.withDefaults());
+            .httpBasic(httpBasic -> {});
 
         return http.build();
     }
